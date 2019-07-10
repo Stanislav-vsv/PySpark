@@ -1,0 +1,22 @@
+<coordinator-app name="crd_hist_jira_clientfeedback"
+         frequency="${coord:days(1)}"
+         start="${coord_start_time}"
+         end="${coord_end_time}"
+         timezone="GMT+03:00"
+         xmlns="uri:oozie:coordinator:0.4">
+  <action>
+    <workflow>
+      <app-path>${workflow_application_path}</app-path>
+      <configuration>
+        <property>
+            <name>wf_reg_name</name>
+	    <value>man_hist_jira_clientfeedback</value>
+        </property>
+        <property>
+            <name>wf_ctl_name</name>
+	    <value>manual</value>
+        </property>
+      </configuration>
+    </workflow>
+  </action>
+</coordinator-app>

@@ -1,0 +1,37 @@
+<workflow-app name="wf_hist_jira_clientfeedback" xmlns="uri:oozie:workflow:0.5">
+  <global>
+            <configuration>
+                <property>
+                    <name>oozie.launcher.mapred.job.queue.name</name>
+                    <value>launchers</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.map.memory.mb</name>
+                    <value>512</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.yarn.app.mapreduce.am.resource.mb</name>
+                    <value>4096</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.map.java.opts</name>
+                    <value>-Xmx4096m</value>
+                </property>
+            </configuration>
+  </global>
+	<start to="wf_jira_clientfeedback"/>
+    <kill name="Kill">
+        <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+	<action name="wf_jira_clientfeedback">
+        <sub-workflow>
+            <app-path>${nameNode}${wf_atom_path}/wf_jira_clientfeedback</app-path>
+              <propagate-configuration/>
+        </sub-workflow>
+        <ok to="End"/>
+        <error to="Kill"/>
+	</action>
+    
+    <end name="End"/>
+</workflow-app>

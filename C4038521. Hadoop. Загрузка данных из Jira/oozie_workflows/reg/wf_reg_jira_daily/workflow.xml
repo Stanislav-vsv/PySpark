@@ -1,0 +1,47 @@
+<workflow-app name="wf_reg_jira_daily" xmlns="uri:oozie:workflow:0.5">
+    <parameters>
+        <property>
+            <name>wf_reg_name</name>
+            <value>wf_reg_jira_daily</value>
+        </property>
+    </parameters>
+  <global>
+            <configuration>
+                <property>
+                    <name>oozie.launcher.mapred.job.queue.name</name>
+                    <value>launchers</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.map.memory.mb</name>
+                    <value>512</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.yarn.app.mapreduce.am.resource.mb</name>
+                    <value>4096</value>
+                </property>
+                <property>
+                    <name>oozie.launcher.mapreduce.map.java.opts</name>
+                    <value>-Xmx4096m</value>
+                </property>
+            </configuration>
+  </global>
+	<start to="wf_ctl_jira_daily"/>
+    <kill name="Kill">
+        <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+
+	<action name="wf_ctl_jira_daily">
+        <sub-workflow>
+            <app-path>${nameNode}${wf_ctl_path}/wf_ctl_jira_daily</app-path>
+              <propagate-configuration/>
+        </sub-workflow>
+        <ok to="End"/>
+        <error to="Kill"/>
+	</action>
+
+
+
+
+    <end name="End"/>
+</workflow-app>

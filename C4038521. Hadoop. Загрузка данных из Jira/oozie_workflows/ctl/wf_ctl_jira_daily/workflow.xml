@@ -1,0 +1,22 @@
+<workflow-app name="wf_ctl_jira_daily" xmlns="uri:oozie:workflow:0.5">
+    <parameters>
+        <property>
+            <name>wf_ctl_name</name>
+            <value>wf_ctl_jira_daily</value>
+        </property>
+    </parameters>
+    <start to="wf_jira_clientfeedback"/>
+    <kill name="Kill">
+        <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+    <action name="wf_jira_clientfeedback"><!--Stream Count: 1-->
+        <sub-workflow>
+            <app-path>${nameNode}${wf_atom_path}/wf_jira_clientfeedback</app-path>
+                <propagate-configuration/>
+        </sub-workflow>
+        <ok to="End"/>
+        <error to="Kill"/>
+    </action>
+    <end name="End"/>
+</workflow-app>

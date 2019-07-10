@@ -1,0 +1,30 @@
+<coordinator-app name="crd_reg_jira_daily"
+         frequency="${coord:days(1)}"
+         start="${coord_start_time}"
+         end="${coord_end_time}"
+         timezone="GMT+03:00"
+         xmlns="uri:oozie:coordinator:0.4">
+  <action>
+    <workflow>
+      <app-path>${workflow_application_path}</app-path>
+      <configuration>
+        <property>
+          <name>LOAD_DATE_FROM</name>
+          <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(), -7, 'DAY'), 'yyyyMMdd')}</value>
+        </property>
+        <property>
+          <name>LOAD_DATE_FROM_3d</name>
+          <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(), -3, 'DAY'), 'yyyyMMdd')}</value>
+        </property>
+        <property>
+          <name>LOAD_DATE_TO</name>
+          <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(), 1, 'DAY'), 'yyyyMMdd')}</value>
+        </property>
+        <property>
+          <name>current_day</name>
+          <value>${coord:formatTime(coord:nominalTime(), 'dd.MM.yyyy')}</value>
+        </property>
+      </configuration>
+    </workflow>
+  </action>
+</coordinator-app>

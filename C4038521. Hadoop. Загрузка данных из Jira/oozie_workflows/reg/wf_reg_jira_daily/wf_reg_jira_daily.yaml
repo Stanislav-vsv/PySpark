@@ -1,0 +1,38 @@
+--- !reg
+api_version: 0.1
+reg_name: wf_reg_jira_daily
+atom_name:
+    - wf_jira_clientfeedback
+
+tasks:
+    - configure_start_sh: Настройка параметров инсталлятора
+      name: Настройка параметров start.sh
+      params: "coord_start_time=См. регламент загрузки в confluence
+
+                 coord_end_time=Дата постановки соответствующего reg-потока. См. Настройка параметров reg-потоков
+
+                 DATABASE=Имя базы-приемника для основных таблиц
+
+                 TMP_DATABASE=Имя базы-приемника для временных промежуточных таблиц
+
+                 JIRA_USER=Технологический пользователь для данной СИ (debitsvzn_tech_user)
+
+                 JIRA_PASSWORD=Пароль технологического пользователя для данной СИ
+
+                 KERBEROS_PRINCIPAL=Наименование Principal из Kerberos Keytab (предполагаемое – tech_oozie@BDA.MOSCOW.ALFAINTRA.NET)
+
+                 KERBEROS_KEYTAB=Полный HDFS-путь до  Kerberos Keytab для tech_oozie (для dev был /user/dev_tech_oozie/config/dev_tech_oozie.keytab)"
+
+envs:
+    prod:
+        - copy_local_files
+        - check_properties_exists
+        - configure_start_sh
+        - copy_to_hdfs
+        - run_workflow
+    test:
+        - copy_local_files
+        - check_properties_exists
+        - configure_start_sh
+        - copy_to_hdfs
+        - run_workflow

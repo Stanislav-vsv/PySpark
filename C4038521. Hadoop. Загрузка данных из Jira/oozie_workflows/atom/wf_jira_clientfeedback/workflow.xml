@@ -1,0 +1,109 @@
+<workflow-app name="wf_jira_clientfeedback" xmlns="uri:oozie:workflow:0.5">
+  <parameters>
+        <property>
+            <name>wf_reg_name</name>
+        </property>
+        <property>
+            <name>wf_ctl_name</name>
+        </property>
+  </parameters>
+  <credentials>
+    <credential name="hive2" type="hive2">
+      <property>
+        <name>hive2.jdbc.url</name>
+        <value>${hive2_jdbc_url}</value>
+      </property>
+      <property>
+        <name>hive2.server.principal</name>
+        <value>${hive2_server_principal}</value>
+      </property>
+    </credential>
+    <credential name="hcat" type="hcat">
+      <property>
+          <name>hcat.metastore.uri</name>
+          <value>${hcat_metastore_uri}</value>
+      </property>
+      <property>
+          <name>hcat.metastore.principal</name>
+          <value>${hive2_server_principal}</value>
+      </property>
+    </credential>
+  </credentials>
+    <start to="shell-clientfeedback"/>
+    <kill name="Kill">
+        <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+     <!--Run Python Script-->
+    <action name="shell-clientfeedback" cred="hcat">
+        <shell xmlns="uri:oozie:shell-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <exec>issues_and_comments.py</exec> <!--(обязательно) короткое имя запускаемого python-скрипта-->
+            <argument>--DATABASE</argument> <!--ключ аргумента, принимаемый python-скриптом для моей специфичной задачи-->
+            <argument>${DATABASE}</argument> <!--значение из start.sh, принимаемое python-скриптом для моей специфичной задачи-->
+            <argument>--TMP_DATABASE</argument> <!--ключ аргумента, принимаемый python-скриптом для моей специфичной задачи-->
+            <argument>${TMP_DATABASE}</argument> <!--значение из start.sh, принимаемое python-скриптом для моей специфичной задачи-->
+            <argument>--JIRA_USER</argument> <!--ключ аргумента, принимаемый python-скриптом для моей специфичной задачи-->
+            <argument>${JIRA_USER}</argument> <!--значение из start.sh, принимаемое python-скриптом для моей специфичной задачи-->
+            <argument>--JIRA_PASSWORD</argument> <!--ключ аргумента, принимаемый python-скриптом для моей специфичной задачи-->
+            <argument>${JIRA_PASSWORD}</argument> <!--значение из start.sh, принимаемое python-скриптом для моей специфичной задачи-->
+            <argument>--KERBEROS_PRINCIPAL</argument> <!--(обязательно) ключ аргумента, принимаемый python-скриптом для Kerberos-->
+            <argument>${KERBEROS_PRINCIPAL}</argument> <!--(обязательно) значение аргумента, принимаемый python-скриптом для Kerberos-->
+            <argument>--INITIAL_LOAD</argument>
+            <argument>${INITIAL_LOAD}</argument> <!--значение из start.sh, принимаемое python-скриптом для моей специфичной задачи-->
+            <argument>--HIVE_PRINCIPAL</argument> <!--(обязательно, если нужен hive) ключ аргумента, принимаемый python-скриптом-->
+            <argument>${hive2_server_principal}</argument> <!--(обязательно, если нужен hive) значение из hcat cred -->
+            <argument>--HIVE_URI</argument> <!--(обязательно, если нужен hive) ключ аргумента, принимаемый python-скриптом-->
+            <argument>${hcat_metastore_uri}</argument> <!--(обязательно, если нужен hive) значение из hcat cred -->
+            <env-var>JAVA_HOME=/usr/java/default</env-var> <!-- (обязательно) переменная, требуемая spark (прописана в конфигурации hadoop) -->
+            <env-var>SPARK_HOME=/opt/cloudera/parcels/SPARK2/lib/spark2</env-var> <!-- (обязательно) переменная, требуемая spark (прописана в конфигурации hadoop) -->
+            <env-var>PYSPARK_PYTHON=/opt/anaconda/bin/python3</env-var> <!-- (обязательно) переменная, требуемая spark (прописана в конфигурации hadoop) -->
+            <env-var>PYTHONPATH=/opt/cloudera/parcels/SPARK2/lib/spark2/python/lib/py4j-0.10.4-src.zip:/opt/cloudera/parcels/SPARK2/lib/spark2/python/</env-var>
+            <file>pyspark/issues_and_comments.py#issues_and_comments.py</file> <!--(обязательно) относительный путь до python-скрипта -->
+            <file>${KERBEROS_KEYTAB}#KERBEROS_KEYTAB</file> <!--(обязательно) путь до keytab (передаю из start.sh) -->
+            <capture-output/>
+        </shell>
+        <ok to="End"/>
+        <error to="Kill"/>
+    </action>
+    <!--<action name="pyspark-clientfeedback">-->
+        <!--<spark xmlns="uri:oozie:spark-action:0.2">-->
+            <!--<job-tracker>${jobTracker}</job-tracker>-->
+            <!--<name-node>${nameNode}</name-node>-->
+            <!--<configuration>-->
+                <!--<property>-->
+                    <!--<name>oozie.launcher.mapred.child.env</name>-->
+                    <!--<value>PYSPARK_PYTHON=/opt/anaconda/bin/python3</value>-->
+                <!--</property>-->
+                <!--<property>-->
+                    <!--<name>oozie.launcher.mapred.child.env</name>-->
+                    <!--<value>PYTHONPATH=PYTHONPATH:/opt/cloudera/parcels/SPARK2/lib/spark2/python:/opt/cloudera/parcels/SPARK2/lib/spark2/python/lib/py4j-0.10.4-src.zip</value>-->
+                <!--</property>-->
+            <!--</configuration>-->
+            <!--<master>yarn-client</master>-->
+            <!--<name>ClientFeedback Jira task</name>-->
+            <!--<jar>issues_and_comments.py</jar>-->
+            <!--<spark-opts>&#45;&#45;conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=/opt/anaconda/bin/python3-->
+                <!--&#45;&#45;conf spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON=/opt/anaconda/bin/python3-->
+                <!--&#45;&#45;conf spark.executorEnv.PYSPARK_PYTHON=/opt/anaconda/bin/python3-->
+                <!--&#45;&#45;conf spark.executorEnv.PYSPARK_DRIVER_PYTHON=/opt/anaconda/bin/python3-->
+                <!--&#45;&#45;conf spark.executorEnv.PYTHONPATH=/opt/anaconda/bin/python3</spark-opts>-->
+            <!--<arg>&#45;&#45;HDFS_SCRIPTS_PATH</arg>-->
+            <!--<arg>/user/${user_name}/scripts/</arg>-->
+            <!--<arg>&#45;&#45;DATABASE</arg>-->
+            <!--<arg>${DATABASE}</arg>-->
+            <!--<arg>&#45;&#45;TMP_DATABASE</arg>-->
+            <!--<arg>${TMP_DATABASE}</arg>-->
+            <!--<arg>&#45;&#45;JIRA_USER</arg>-->
+            <!--<arg>${JIRA_USER}</arg>-->
+            <!--<arg>&#45;&#45;JIRA_PASSWORD</arg>-->
+            <!--<arg>${JIRA_PASSWORD}</arg>-->
+            <!--<arg>&#45;&#45;INITIAL_LOAD</arg>-->
+            <!--<arg>${INITIAL_LOAD}</arg>-->
+            <!--<file>pyspark/issues_and_comments.py#issues_and_comments.py</file>-->
+        <!--</spark>-->
+        <!--<ok to="End"/>-->
+        <!--<error to="Kill"/>-->
+    <!--</action>-->
+    <end name="End"/>
+</workflow-app>
